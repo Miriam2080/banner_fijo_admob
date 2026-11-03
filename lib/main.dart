@@ -1,122 +1,133 @@
-import 'package:flutter/material.dart';
 
+import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+
+// Inicia la aplicación y el servicio de anuncios.
 void main() {
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Inicializa Google AdMob.
+  MobileAds.instance.initialize();
+
+  runApp(const MiAplicacion());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+// Configuración principal de la aplicación.
+class MiAplicacion extends StatelessWidget {
+  const MiAplicacion({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: PantallaInicio(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+// Pantalla donde aparecerá el anuncio.
+class PantallaInicio extends StatefulWidget {
+  const PantallaInicio({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<PantallaInicio> createState() => _PantallaInicioState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _PantallaInicioState extends State<PantallaInicio> {
+  BannerAd? _banner;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  @override
+  void initState() {
+    super.initState();
+    cargarBanner();
+  }
+
+  // Solicita el anuncio a Google AdMob.
+  void cargarBanner() {
+    final anuncio = BannerAd(
+      // Identificador del anuncio de prueba número 4.
+      adUnitId: 'ca-app-pub-3940256099942544/6300978111',
+
+      // Banner fijo de 320 x 50 dp.
+      size: AdSize.banner,
+
+      request: const AdRequest(),
+
+      listener: BannerAdListener(
+        // Se ejecuta cuando el anuncio se carga.
+        onAdLoaded: (ad) {
+          if (!mounted) {
+            ad.dispose();
+            return;
+          }
+
+          setState(() {
+            _banner = ad as BannerAd;
+          });
+
+          debugPrint('Banner cargado correctamente');
+        },
+
+        // Se ejecuta si ocurre un error.
+        onAdFailedToLoad: (ad, error) {
+          debugPrint('Error al cargar banner: $error');
+          ad.dispose();
+        },
+      ),
+    );
+
+    // Inicia la carga del anuncio.
+    anuncio.load();
+  }
+
+  @override
+  void dispose() {
+    // Libera los recursos del anuncio.
+    _banner?.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: const Text('Banner de tamaño fijo'),
+        backgroundColor: Colors.teal,
+        foregroundColor: Colors.white,
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+
+      body: const Center(
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('You have pushed the button this many times:'),
+            Icon(Icons.phone_android, size: 80),
+            SizedBox(height: 20),
             Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+              'Integración de Google AdMob',
+              style: TextStyle(fontSize: 20),
             ),
+            SizedBox(height: 10),
+            Text('Anuncio de demostración número 4'),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
+
+      // Coloca el anuncio en la parte inferior.
+      bottomNavigationBar: _banner == null
+          ? null
+          : SafeArea(
+              top: false,
+              child: SizedBox(
+                height: _banner!.size.height.toDouble(),
+                child: Center(
+                  child: SizedBox(
+                    width: _banner!.size.width.toDouble(),
+                    height: _banner!.size.height.toDouble(),
+                    child: AdWidget(ad: _banner!),
+                  ),
+                ),
+              ),
+            ),
     );
   }
 }
